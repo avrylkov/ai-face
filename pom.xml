@@ -18,7 +18,7 @@
   <url>http://maven.apache.org</url>
   <modules>
     <module>AppClassifier</module>
-    <module>Utils</module>
+    <module>CommonCv</module>
     <module>DemoUi</module>
   </modules>
 
