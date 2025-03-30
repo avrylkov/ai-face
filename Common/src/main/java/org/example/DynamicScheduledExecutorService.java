@@ -1,6 +1,5 @@
 package org.example;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -19,7 +18,7 @@ public class DynamicScheduledExecutorService extends ScheduledThreadPoolExecutor
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(@NotNull Runnable command, long initialDelay, long period, @NotNull TimeUnit unit) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
         setPoolSiz();
         return super.scheduleAtFixedRate(command, initialDelay, period, unit);
     }

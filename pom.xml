@@ -20,6 +20,7 @@
     <module>AppClassifier</module>
     <module>CommonCv</module>
     <module>DemoUi</module>
+    <module>Common</module>
   </modules>
 
   <properties>

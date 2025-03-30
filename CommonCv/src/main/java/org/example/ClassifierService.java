@@ -15,6 +15,7 @@ import org.opencv.features2d.Feature2D;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,6 +52,23 @@ public class ClassifierService {
                 log.error(e);
             }
         }
+    }
+
+    public boolean loadModelFromJson() {
+        File file = new File("./" + MODEL_FILE);
+        if (file.exists()) {
+            try {
+                String fileToString = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+                deserializeModel(fileToString);
+                log.info("Load deserialized Model");
+            } catch (IOException e) {
+                log.error(e);
+                return false;
+            }
+        } else {
+            log.info("Create new model");
+        }
+        return true;
     }
 
     public String serializeModel() {

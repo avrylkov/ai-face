@@ -50,7 +50,7 @@ public class AppClassifier extends Application {
 
     @Override
     public void start(Stage stage) {
-        if (!loadModelFromJson()) {
+        if (!classifierService.loadModelFromJson()) {
             log.error("Не удалось загрузить модель");
             return;
         }
@@ -158,23 +158,6 @@ public class AppClassifier extends Application {
         } catch (IOException e) {
             log.error(e);
         }
-    }
-
-    private boolean loadModelFromJson() {
-        File file = new File("./" + MODEL_FILE);
-        if (file.exists()) {
-            try {
-                String fileToString = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                classifierService.deserializeModel(fileToString);
-                log.info("Load deserialized Model");
-            } catch (IOException e) {
-                log.error(e);
-                return false;
-            }
-        } else {
-            log.info("Create new model");
-        }
-        return true;
     }
 
 }
