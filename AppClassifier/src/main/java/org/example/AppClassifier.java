@@ -33,7 +33,6 @@ public class AppClassifier
     private final OpenCvUtils openCvUtils = new OpenCvUtils();
     private final ClassifierService classifierService = new ClassifierService(openCvUtils);
     private VideoCapture videoCapture;
-    private Mat blackRec;
 
     //private final TaskExecutor exec = new SimpleAsyncTaskExecutor();
 
@@ -74,7 +73,6 @@ public class AppClassifier
             }
             openCvUtils.loadCascadeClassifier();
             videoCapture = new VideoCapture(0); // The number is the ID of the camera
-            blackRec = OpenCvUtils.loadImage("./black-rec.jpg");
             startTasksClassifier();
             //
             System.out.println("Hit Enter to terminate...");
@@ -122,6 +120,7 @@ public class AppClassifier
         }
         saveModel.set(true);
         log.info("Save model");
+        classifierService.saveModelToJson();
         saveModel.set(false);
     }
 

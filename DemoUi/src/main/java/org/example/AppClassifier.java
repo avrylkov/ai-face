@@ -118,7 +118,7 @@ public class AppClassifier extends Application {
         try {
             schedule.get();
             //classifierService.clearSameImage();
-            saveModelToJson();
+            classifierService.saveModelToJson();
             cameraReady.set(true);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
@@ -148,16 +148,6 @@ public class AppClassifier extends Application {
         }
 
         return Utils.mat2Img(imageGray);
-    }
-
-    private void saveModelToJson() {
-        String serializeModel = classifierService.serializeModel();
-        log.info("Serialized Model");
-        try {
-            FileUtils.writeStringToFile(new File("./" + MODEL_FILE), serializeModel, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            log.error(e);
-        }
     }
 
 }

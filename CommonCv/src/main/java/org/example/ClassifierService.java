@@ -71,8 +71,14 @@ public class ClassifierService {
         return true;
     }
 
-    public String serializeModel() {
-        return JsonStream.serialize(imageParents);
+    public void saveModelToJson() {
+        String serializeModel = serializeModel();
+        log.info("Serialized Model");
+        try {
+            FileUtils.writeStringToFile(new File("./" + MODEL_FILE), serializeModel, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error(e);
+        }
     }
 
     public void deserializeModel(String model) {
@@ -122,6 +128,10 @@ public class ClassifierService {
             imageParent.setChildren(firstChildren);
         });
 
+    }
+
+    private String serializeModel() {
+        return JsonStream.serialize(imageParents);
     }
 
     private boolean matchParent(Mat inputImage) {
