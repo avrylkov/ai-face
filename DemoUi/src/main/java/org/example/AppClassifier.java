@@ -12,7 +12,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
@@ -22,16 +21,11 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.example.ClassifierService.MODEL_FILE;
 
 public class AppClassifier extends Application {
 
@@ -43,6 +37,7 @@ public class AppClassifier extends Application {
     private VideoCapture videoCapture;
     private AtomicBoolean cameraReady = new AtomicBoolean(false);
     private Mat blackRec;
+    private Mat faceImage;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -61,6 +56,7 @@ public class AppClassifier extends Application {
 
         scheduler.schedule(() -> cameraReady.set(true), 5, TimeUnit.SECONDS);
         scheduler.scheduleAtFixedRate(this::scheduleSaveModel, 5, 3, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::startClassifier, 0, 200, TimeUnit.MILLISECONDS);
 
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(15));
@@ -125,17 +121,19 @@ public class AppClassifier extends Application {
         }
     }
 
-    private Image getCaptureWithFaceDetection() {
+    private void startClassifier() {
         Mat inputImage = new Mat();
         if (videoCapture.isOpened()) {
             videoCapture.read(inputImage);
         } else {
-            return Utils.mat2Img(blackRec);
+            faceImage = null;
+            return;
         }
         Mat imageGray = new Mat();
         Imgproc.cvtColor(inputImage, imageGray, Imgproc.COLOR_BGR2GRAY);
         if (!cameraReady.get()) {
-            return Utils.mat2Img(imageGray);
+            faceImage = imageGray;
+            return;
         }
         MatOfRect matOfRect = openCvUtils.detectFace(imageGray);
         Rect[] facesArray = matOfRect.toArray();
@@ -146,8 +144,15 @@ public class AppClassifier extends Application {
             Imgproc.rectangle(imageGray, f.tl(), f.br(), new Scalar(0, 0, 255), 2);
             break;
         }
+        faceImage = imageGray;
+    }
 
-        return Utils.mat2Img(imageGray);
+    private Image getCaptureWithFaceDetection() {
+        if (faceImage == null) {
+            return Utils.mat2Img(blackRec);
+        } else {
+            return Utils.mat2Img(faceImage);
+        }
     }
 
 }

@@ -1,12 +1,15 @@
 package org.example;
 
 import nu.pattern.OpenCV;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfRect;
@@ -37,6 +40,8 @@ import static org.opencv.features2d.DescriptorMatcher.BRUTEFORCE_L1;
 import static org.opencv.features2d.DescriptorMatcher.FLANNBASED;
 
 public class OpenCvUtils {
+
+    private static final Logger log = LogManager.getLogger(OpenCvUtils.class);
 
     private MatOfDMatch matOfDMatchEmpty;
 
@@ -101,7 +106,19 @@ public class OpenCvUtils {
     }
 
     public static void saveImage(Mat imageMatrix, String targetPath) {
-        Imgcodecs.imwrite(targetPath, imageMatrix);
+        Imgcodecs.imwrite(targetPath, imageMatrix, new MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY , 100));
+    }
+
+    public static Mat encodeImage2Jpg(Mat inputImage) {
+        MatOfByte buf = new MatOfByte();
+        boolean status = Imgcodecs.imencode(".jpg", inputImage, buf,
+                new MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY , 100));
+        if(status) {
+            return Imgcodecs.imdecode(buf, Imgcodecs.IMREAD_UNCHANGED);
+        } else {
+            log.error("Encoding jpg image error");
+        }
+        return null;
     }
 
     public static Mat loadImage(String filePath) {

@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.springframework.boot.ApplicationRunner;
@@ -141,7 +140,7 @@ public class AppClassifier
             Rect f = new Rect(face.x - 10, face.y - 10, face.width + 10, face.height + 10);
             final Mat faceRect = imageGray.submat(f);
             classifierService.process(faceRect);
-            Imgproc.rectangle(imageGray, f.tl(), f.br(), new Scalar(0, 0, 255), 2);
+            //Imgproc.rectangle(imageGray, f.tl(), f.br(), new Scalar(0, 0, 255), 2);
             break;
         }
 

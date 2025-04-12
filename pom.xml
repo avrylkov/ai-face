@@ -21,6 +21,7 @@
     <module>CommonCv</module>
     <module>DemoUi</module>
     <module>Common</module>
+    <module>LangModel</module>
   </modules>
 
   <properties>

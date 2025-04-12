@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
@@ -25,6 +26,7 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.shape.StrokeType;
 import javafx.stage.Stage;
+import javafx.geometry.Orientation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
@@ -135,6 +137,8 @@ public class AppOpenCvKeyPointFile extends Application {
         Border border = new Border(borderStroke);
         bottom2.setBorder(border);
         //
+        Separator separator = new Separator(Orientation.VERTICAL);
+        //
         FlowPane bottom1 = new FlowPane();
         bottom1.getChildren().add(textFile1);
         bottom1.getChildren().add(textFile2);
@@ -145,6 +149,7 @@ public class AppOpenCvKeyPointFile extends Application {
         bottom1.getChildren().add(radioBtnBf);
         bottom1.getChildren().add(radioBtnKnn);
         bottom1.getChildren().add(radioBtnKnnHm);
+        bottom1.getChildren().add(separator);
         bottom1.getChildren().add(label);
         bottom2.getChildren().add(radioBtnOrb);
         bottom2.getChildren().add(radioBtnSift);

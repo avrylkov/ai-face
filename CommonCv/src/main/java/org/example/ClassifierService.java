@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ClassifierService {
 
@@ -33,7 +32,7 @@ public class ClassifierService {
     private static final Logger log = LogManager.getLogger(ClassifierService.class);
 
     private List<ImageParent> imageParents = new ArrayList<>();
-    private static final int MATCH_MINIMAL = 7;
+    private static final int MATCH_MINIMAL = 6;
     //public int prevGoodCounts = 0;
     //public int goodCounts = 0;
     //public String prevImageParent = "";
@@ -42,11 +41,12 @@ public class ClassifierService {
         boolean isMatchParent = matchParent(inputImage);
         if (!isMatchParent) {
             String name = StringUtils.leftPad(String.valueOf(imageParents.size()), 5, '0');
-            ImageParent imageParent = new ImageParent(name, inputImage);
             try {
-                FileUtils.forceMkdir(new File("./" + imageParent.getName()));
+                FileUtils.forceMkdir(new File("./" + name));
+                Mat encodeImage = OpenCvUtils.encodeImage2Jpg(inputImage);
+                ImageParent imageParent = new ImageParent(name, encodeImage);
                 imageParents.add(imageParent);
-                OpenCvUtils.saveImage(inputImage, String.format("./%s/%s.jpg", imageParent.getName(), imageParent.getName()));
+                OpenCvUtils.saveImage(encodeImage, String.format("./%s/%s.jpg", imageParent.getName(), imageParent.getName()));
                 log.info("Save parent {}", imageParent.getName());
             } catch (IOException e) {
                 log.error(e);
@@ -81,53 +81,12 @@ public class ClassifierService {
         }
     }
 
-    public void deserializeModel(String model) {
+    private void deserializeModel(String model) {
         ImageParent[] deserialize = JsonIterator.deserialize(model, ImageParent[].class);
         imageParents = new ArrayList<>(Arrays.asList(deserialize));
         for (ImageParent imageParent : imageParents) {
             imageParent.setImage(OpenCvUtils.loadImage("./" + imageParent.getName() + "/" + imageParent.getName() + ".jpg"));
         }
-    }
-
-    public void clearSameImage_() {
-        imageParents.forEach(imageParent -> {
-            List<ImageChildren> roundedParentCounts = imageParent.getChildren()
-                    .stream()
-                    .peek(s -> s.setGoodParentCounts((int) Math.round(s.getGoodParentCounts() / 50.0) * 50))
-                    .collect(Collectors.toList());
-            //
-            List<Integer> uniqueParentCounts = roundedParentCounts
-                    .stream()
-                    .map(ImageChildren::getGoodParentCounts)
-                    .distinct()
-                    .collect(Collectors.toList());
-            //
-            List<ImageChildren> firstChildren = new ArrayList<>();
-            uniqueParentCounts.forEach(count -> {
-                roundedParentCounts
-                        .stream()
-                        .filter(f -> f.getGoodParentCounts() == count)
-                        .findFirst()
-                        .ifPresent(firstChildren::add);
-            });
-            //
-            imageParent.getChildren().stream()
-                    .filter(image -> image.getName().contains("_"))
-                    .filter(image -> firstChildren.stream().noneMatch(firstImage -> firstImage.getName().equals(image.getName())))
-                    .forEach(image -> {
-                                String path = "./" + StringUtils.substringBefore(imageParent.getName(), ".") + "/" + image.getName() + ".jpg";
-                                try {
-                                    log.info("Delete image path={}, image = {}", path, image.toString());
-                                    FileUtils.delete(new File(path));
-                                } catch (IOException e) {
-                                    log.error(e);
-                                }
-                            }
-                    );
-
-            imageParent.setChildren(firstChildren);
-        });
-
     }
 
     private String serializeModel() {
@@ -139,14 +98,16 @@ public class ClassifierService {
             MatOfKeyPoint imageInputKeyPoints = new MatOfKeyPoint();
             Mat imageInputDescriptors = new Mat();
             Feature2D detector = openCvUtils.createDetector();
-            detector.detectAndCompute(inputImage, new Mat(), imageInputKeyPoints, imageInputDescriptors);
+
+            Mat encodeInputImage = OpenCvUtils.encodeImage2Jpg(inputImage);
+            detector.detectAndCompute(encodeInputImage, new Mat(), imageInputKeyPoints, imageInputDescriptors);
             //
             MatOfKeyPoint imageParentKeyPoints = new MatOfKeyPoint();
             Mat imageParentDescriptors = new Mat();
             detector.detectAndCompute(imageParent.getImage(), new Mat(), imageParentKeyPoints, imageParentDescriptors);
             //
-            MatOfDMatch matOfDMatch = openCvUtils.descriptorMatcherKnnHomography(imageInputKeyPoints, imageParentKeyPoints, imageInputDescriptors, imageParentDescriptors);
-            if (matOfDMatch.toArray().length > MATCH_MINIMAL) {
+            MatOfDMatch matOfDMatch = openCvUtils.descriptorMatcherKnnHomography(imageParentKeyPoints, imageInputKeyPoints, imageParentDescriptors, imageInputDescriptors);
+            if (matOfDMatch.toArray().length >= MATCH_MINIMAL) {
                 int goodCounts = matOfDMatch.toArray().length;
                 boolean similarParentCounts = imageParent.isSimilarParentCounts(goodCounts);
                 //int childAvgCount = imageParent.getChildAvgCount().intValue();
@@ -155,7 +116,7 @@ public class ClassifierService {
                 if (!similarParentCounts) {
                     ImageChildren imageChildren = new ImageChildren(imageParent.getName() + "_" + imageParent.getCounterInc(), goodCounts);
                     imageParent.getChildren().add(imageChildren);
-                    OpenCvUtils.saveImage(inputImage, String.format("./%s/%s.jpg", imageParent.getName(), imageChildren.getName()));
+                    OpenCvUtils.saveImage(encodeInputImage, String.format("./%s/%s.jpg", imageParent.getName(), imageChildren.getName()));
                     log.info(String.format("Save image %s, goodCounts=%s", imageChildren.getName(), goodCounts));
                     return true;
                 } else {
@@ -163,7 +124,7 @@ public class ClassifierService {
                     return true;
                 }
             } else {
-                log.info("Match length={}", matOfDMatch.toArray().length);
+                log.info("No match of parent={}, length={}", imageParent.getName(), matOfDMatch.toArray().length);
             }
         }
         return false;
