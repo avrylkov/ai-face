@@ -5,10 +5,10 @@ import chat.giga.client.auth.AuthClientBuilder;
 import chat.giga.langchain4j.GigaChatChatModel;
 import chat.giga.langchain4j.GigaChatChatRequestParameters;
 import chat.giga.model.ModelName;
-import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.agent.tool.P;
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -18,24 +18,35 @@ import dev.langchain4j.service.SystemMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
+import java.util.Map;
 
 import static chat.giga.model.Scope.GIGACHAT_API_PERS;
 
-public class AppGigaLangChain
+public class AppGigaTool
 {
-    private static Logger log = LogManager.getLogger(AppGigaLangChain.class);
+    private static Logger log = LogManager.getLogger(AppGigaTool.class);
+
+    static class FunctionCallingService {
+        record Transaction(String id) { }
+        record Status(String name) { }
+
+        private static final Map<Transaction, Status> DATASET = Map.of(
+                new Transaction("001"), new Status("pending"),
+                new Transaction("002"), new Status("approved"),
+                new Transaction("003"), new Status("rejected"));
+
+        @Tool("Получить статус платежной транзакции")
+        public Status paymentStatus(@P("Идентификатор платежной транзакции") String transaction) {
+            System.out.println();
+            return DATASET.get(new Transaction(transaction));
+        }
+    }
 
     interface Assistant {
-
-        @SystemMessage("Отвечай, используя сленг.")
+        @SystemMessage("Вы полезный помощник, который может ответить на вопросы о платежных транзакциях.")
         String chat(String userMessage);
     }
 
-    interface AssistantMemory {
-        String chat(@MemoryId int memoryId, @dev.langchain4j.service.UserMessage String message);
-        //String chat(String message);
-    }
 
     public static void main( String[] args ) {
 
@@ -54,26 +65,20 @@ public class AppGigaLangChain
                             .modelName(ModelName.GIGA_CHAT_2)
                             .build())
                     .build();
-            ChatResponse chatResponse = model.chat(ChatRequest.builder().messages(new UserMessage("как дела?"))
-                    .build());
-            System.out.println(chatResponse.aiMessage().text());
-            //
-            Assistant assistantWithSystemMessge = AiServices.create(Assistant.class, model);
-            String chat = assistantWithSystemMessge.chat("Как дела?");
-            System.out.println(chat);
-            //
-            ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(10);
-            AssistantMemory assistantWithChatMemory = AiServices.builder(AssistantMemory.class)
-                    .chatLanguageModel(model)
-                    //.chatMemory(chatMemory)
-                    .chatMemoryProvider(memoryId -> chatMemory)
-                    .build();
 
-            System.out.println(assistantWithChatMemory.chat(1,"Привет, мення завут Александр"));
-            System.out.println(assistantWithChatMemory.chat(2,"Привет, мення завут Иван"));
+            FunctionCallingService service = new FunctionCallingService();
+
+            Assistant assistant = AiServices.builder(Assistant.class)
+                    .chatLanguageModel(model)
+                    .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
+                    .tools(service)
+                    .build();
             //
-            System.out.println(assistantWithChatMemory.chat(1,"Ты помнишь как мое имя?"));
-            System.out.println(assistantWithChatMemory.chat(2,"Ты помнишь как мое имя?"));
+            String userMessage = "Ответьте на следующие вопросы: " +
+                    "Каков статус моих платежных транзакций 002, 001, 003?\n" +
+                    "Пожалуйста, укажите статус каждой транзакции";
+
+            System.out.println(assistant.chat(userMessage));
 
         } catch (Exception ex) {
             ex.printStackTrace();
