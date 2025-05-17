@@ -39,7 +39,7 @@ public class AppGigaRagNaive2 {
 
     private static Logger log = LogManager.getLogger(AppGigaRagNaive2.class);
 
-    private static String query = "what to use for a pdf file"; //"С чем осталась старуха в конце";
+    private static String query = "С чем осталась старуха в конце";//"what to use for a pdf file"; //"С чем осталась старуха в конце";
 
     public interface Assistant {
 
@@ -102,10 +102,10 @@ public class AppGigaRagNaive2 {
                 .build();
 
         // Теперь давайте загрузим документ, который мы хотим использовать для RAG.
-        //DocumentParser documentParser = new ApachePdfBoxDocumentParser();
-        //Document document = loadDocument(CommonUtils.toPath(documentPath), documentParser);
+        DocumentParser documentParser = new ApachePdfBoxDocumentParser();
+        Document document = loadDocument(CommonUtils.toPath(documentPath), documentParser);
 
-        Document document = UrlDocumentLoader.load("https://docs.langchain4j.dev/tutorials/rag", new TextDocumentParser());
+        //Document document = UrlDocumentLoader.load("https://docs.langchain4j.dev/tutorials/rag", new TextDocumentParser());
 
 
         // Теперь нам нужно разбить этот документ на более мелкие сегменты, также известные как "куски".
