@@ -41,6 +41,7 @@
        <MenuBar>
            <Menu text="File">
                <MenuItem onAction="#onStart" text="Start" />
+                <CheckMenuItem fx:id="pauseDetect" mnemonicParsing="false" onAction="#onPauseDetect" text="Pause detect" />
            </Menu>
        </MenuBar>
    </top>

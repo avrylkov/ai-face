@@ -3,6 +3,7 @@ package org.example.face.speech;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
@@ -26,6 +27,7 @@ public class SpeechFaceController {
     public ImageView imageAgentBusy;
     public Button microphoneButton;
     public ListView<String> toolFeedBack;
+    public CheckMenuItem pauseDetect;
 
     @FXML
     private ImageView imageView;
@@ -42,7 +44,6 @@ public class SpeechFaceController {
     }
 
     public void onHandleChat(MouseEvent mouseEvent) {
-        log.info("onClick");
         dialogueCycle.onHandleUserText(userText.getText());
     }
 
@@ -84,8 +85,11 @@ public class SpeechFaceController {
     }
 
     public void onStart(ActionEvent actionEvent) {
-        log.info("initialize");
         dialogueCycle.init(this);
+    }
+
+    public void onPauseDetect(ActionEvent actionEvent) {
+        dialogueCycle.pauseDetect(pauseDetect.isSelected());
     }
 
 }

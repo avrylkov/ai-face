@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
 
@@ -19,7 +21,9 @@ import static org.example.face.speech.SpeechFaceController.FxmlBeanController;
 public class FaceConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FaceConfig.class.getName());
-    private int counter = 0;
+
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+    
 
     @Bean
     public Consumer<String> toolConsumer() {
@@ -30,9 +34,10 @@ public class FaceConfig {
             log.info("Получено сообщение от инструмента: {}", message);
             SpeechFaceController faceController = GlobalContext.getContext().getBean(FxmlBeanController, SpeechFaceController.class);
             // Отправка сообщения в JavaFX UI
+            String currentTime = LocalTime.now().format(TIME_FORMATTER);
             Platform.runLater(() -> {
                 //int size = faceController.toolFeedBack.getItems().size();
-                faceController.toolFeedBack.getItems().add(0, String.format("%s: %s", counter++, message));
+                faceController.toolFeedBack.getItems().add(0, String.format("[%s]: %s",  currentTime, message));
             });
         };
     }
@@ -46,7 +51,7 @@ public class FaceConfig {
             SpeechFaceController faceController = GlobalContext.getContext().getBean(FxmlBeanController, SpeechFaceController.class);
             Platform.runLater(() -> {
                 ObservableList<String> items = faceController.toolFeedBack.getItems();
-                if (!items.isEmpty()) {
+                if (items.size() > 1) {
                     faceController.toolFeedBack.getItems().remove(items.size() - 1);
                 }
             });

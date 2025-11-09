@@ -14,7 +14,6 @@ public class CommonProperties {
     private String embeddingModelTokenizer;
     private String voiceFolder;
     private boolean autoStart;
-    private boolean usePauseDetect;
 
     private CommonProperties() {
         //
@@ -38,7 +37,6 @@ public class CommonProperties {
                 instance.embeddingModel = properties.getProperty("embedding.model");
                 instance.embeddingModelTokenizer = properties.getProperty("embedding.model.tokenizer");
                 instance.autoStart = Boolean.parseBoolean(properties.getProperty("auto.start"));
-                instance.usePauseDetect = Boolean.parseBoolean(properties.getProperty("use.pause.detect"));
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -74,7 +72,4 @@ public class CommonProperties {
         return autoStart;
     }
 
-    public boolean isUsePauseDetect() {
-        return usePauseDetect;
-    }
 }

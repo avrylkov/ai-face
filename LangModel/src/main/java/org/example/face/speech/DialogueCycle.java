@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -48,20 +49,22 @@ public class DialogueCycle {
     private final FeatureExtraction featureExtraction = new FeatureExtraction();
     private final Voice2WishperService voice2WishperService = new Voice2WishperService();
     private final RepeatingTask repeatingLifeCycleTask = new RepeatingTask(this::runDialogueCycle, 0,200, "lifeCycle");
-    //
-    private LLMService llmService;
     private AssistantChatService assistantChatService;
-    private AtomicReference<Face> currentFace = new AtomicReference<>();;
+    private final AtomicReference<Face> currentFace = new AtomicReference<>();;
     private SpeechFaceController speechFaceController;
     private LifeCycleSateEnum currentState = LifeCycleSateEnum.Unknown;
-    private boolean isPauseDetect  = false;
     private boolean isAgentThinks = false;
     private javafx.scene.image.Image imageThink = null;
+    private final AtomicBoolean isPauseDetect =  new AtomicBoolean(false);
 
     private static final float thresholdSimilar = 0.7f;
 
     public void init(SpeechFaceController speechFaceController) {
-        this.llmService = GlobalContext.getContext().getBean(LLMService.class);
+        if (repeatingLifeCycleTask.isStarted()) {
+            return;
+        }
+        //
+        LLMService llmService = GlobalContext.getContext().getBean(LLMService.class);
         this.speechFaceController = speechFaceController;
         imageThink = Utils.getImage("think.gif");
         featureExtraction.init();
@@ -107,16 +110,25 @@ public class DialogueCycle {
         }
     }
 
+    public void pauseDetect(boolean selected) {
+        isPauseDetect.set(selected);
+        if (isPauseDetect.get()) {
+            videoFace2Detection.stopSchedule();
+        } else {
+            videoFace2Detection.start(new Image2View(speechFaceController.getImageView()));
+        }
+    }
+
     /*  -----------------------
      *   Dialogue Cycle
      * ----------------------
      */
     private void runDialogueCycle() throws InterruptedException {
-        log.debug("запуск цикла");
-        if (isPauseDetect) {
-            log.debug("непрерывное обнаружение лиц приостановлено");
+        if (isPauseDetect.get()) {
+            log.debug("обнаружение лиц приостановлено");
             return;
         }
+        log.debug("запуск цикла");
         boolean faceObjectsLock = videoFace2Detection.setDetectedObjectsLock();
         try {
             if (!faceObjectsLock) {
@@ -269,7 +281,6 @@ public class DialogueCycle {
                 if (person != null && person.firstName() != null && person.lastName() != null) {
                     if (currentFace.get() != null && currentFace.get().getPerson() == null) {
                         currentFace.get().setPerson(person, LocalDateTime.now());
-                        setPauseDetect();
                         Platform.runLater(() -> {
                             speechFaceController.getFaceName().setText(person.firstName() + " " + person.lastName());
                         });
@@ -483,13 +494,6 @@ public class DialogueCycle {
 
     private void faceReset() {
         setCurrentFace(null);
-    }
-
-    private void setPauseDetect() {
-        if (CommonProperties.INSTANCE().isUsePauseDetect()) {
-            isPauseDetect = true;
-            videoFace2Detection.setPausePredict(true);
-        }
     }
 
     private void setCurrentState(LifeCycleSateEnum state) {

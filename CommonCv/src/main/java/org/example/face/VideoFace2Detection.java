@@ -33,13 +33,15 @@ public class VideoFace2Detection {
     private Image2View image2View;
     private DetectedObjects detectedObjects;
     private OpenCVImage inputImage;
-    private boolean pausePredict = false;
+
 
     public void start(Image2View image2View) {
         this.image2View = image2View;
         openCVImageFactory = new OpenCVImageFactory();
         videoCapture = new VideoCapture(0);
-        ZooModel<Image, DetectedObjects> faceDetectionModel = faceDetectionService.loadModel();
+        if (!faceDetectionService.isLoaded()) {
+            faceDetectionService.loadModel();
+        }
         //
         Mat inputImageMat = new Mat();
         videoCapture.read(inputImageMat);
@@ -51,6 +53,9 @@ public class VideoFace2Detection {
         log.info("stopSchedule VideoFace2Detection");
         scheduler.shutdown();
         repeatingLifeCycleTask.interrupt();
+        if (videoCapture != null && videoCapture.isOpened()) {
+            videoCapture.release();
+        }
     }
 
     public void close() {
@@ -85,11 +90,7 @@ public class VideoFace2Detection {
             if (triedLock) {
                 //inputImage = (OpenCVImage) image.duplicate();
                 inputImage = image;
-                if (!pausePredict) {
-                    detectedObjects = faceDetectionService.predict(image);
-                } else {
-                    detectedObjects = null;
-                }
+                detectedObjects = faceDetectionService.predict(image);
                 image2View.apply(image);
             }
         } finally {
@@ -111,11 +112,7 @@ public class VideoFace2Detection {
         return detectedObjects;
     }
 
-//    public OpenCVImage getInputImage() {
-//        return inputImage;
-//    }
-
-    public List<OpenCVImage> getFaces(/*OpenCVImage img, */DetectedObjects detection) {
+    public List<OpenCVImage> getFaces(DetectedObjects detection) {
         List<DetectedObjects.DetectedObject> list = detection.items();
         List<OpenCVImage> faces = new ArrayList<>();
         for (DetectedObjects.DetectedObject detectedObject : list) {
@@ -123,10 +120,6 @@ public class VideoFace2Detection {
             faces.add((OpenCVImage) inputImage.getSubImage(rectangle));
         }
         return faces;
-    }
-
-    public void setPausePredict(boolean pausePredict) {
-        this.pausePredict = pausePredict;
     }
 
 }

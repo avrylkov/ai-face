@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.example.lang.model.ToolResult.toolResultNegative;
@@ -74,6 +75,7 @@ public class ToolExecutorSendMessage {
     private String allFacesToString() {
         return GlobalContext.getAllFaces()
                 .stream()
+                .filter(Objects::nonNull)
                 .filter(f -> f.getPerson() != null)
                 .map(g -> g.getPerson().getFullName() + ":" + g.getId())
                 .collect(Collectors.joining("\n"));

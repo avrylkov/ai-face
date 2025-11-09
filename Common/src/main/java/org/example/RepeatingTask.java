@@ -58,8 +58,11 @@ public class RepeatingTask implements Runnable {
     public void interrupt() {
         if (thread != null) {
             thread.interrupt();
-            //isInterrupted = true;
         }
+    }
+
+    public boolean isStarted() {
+        return thread != null && thread.isAlive();
     }
 
 }
