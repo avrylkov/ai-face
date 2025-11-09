@@ -27,12 +27,12 @@ import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.shape.StrokeType;
 import javafx.stage.Stage;
 import javafx.geometry.Orientation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.Feature2D;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -41,7 +41,7 @@ import static org.example.Utils.mat2Img;
 
 public class AppOpenCvKeyPointFile extends Application {
 
-    private static final Logger log = LogManager.getLogger(AppOpenCvKeyPointFile.class);
+    private static final Logger log = LoggerFactory.getLogger(AppOpenCvKeyPointFile.class);
 
     private OpenCvUtils openCvUtils = new OpenCvUtils();
     private ImageView imageView;

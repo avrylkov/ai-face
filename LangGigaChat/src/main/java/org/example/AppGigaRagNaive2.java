@@ -8,8 +8,6 @@ import chat.giga.model.ModelName;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.DocumentSplitter;
-import dev.langchain4j.data.document.loader.UrlDocumentLoader;
-import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
@@ -103,7 +101,7 @@ public class AppGigaRagNaive2 {
 
         // Теперь давайте загрузим документ, который мы хотим использовать для RAG.
         DocumentParser documentParser = new ApachePdfBoxDocumentParser();
-        Document document = loadDocument(CommonUtils.toPath(documentPath), documentParser);
+        Document document = loadDocument(CommonUtils.resourceCommonToPath(documentPath), documentParser);
 
         //Document document = UrlDocumentLoader.load("https://docs.langchain4j.dev/tutorials/rag", new TextDocumentParser());
 

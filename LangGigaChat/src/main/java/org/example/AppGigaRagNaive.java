@@ -19,9 +19,6 @@ import dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15Quantize
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.SystemMessage;
-import dev.langchain4j.service.UserMessage;
-import dev.langchain4j.service.V;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
@@ -29,19 +26,13 @@ import java.util.List;
 
 import static chat.giga.model.Scope.GIGACHAT_API_PERS;
 import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.loadDocument;
-import static org.example.LangGigaUtils.startConversationWith;
+import static org.example.utils.LangGigaUtils.startConversationWith;
 
 public class AppGigaRagNaive {
 
     public interface Assistant {
 
         String answer(String query);
-    }
-
-    interface AssistantPrompt {
-
-        @SystemMessage("Используйте следующую информацию для ответа на вопрос: {{information}}")
-        String chat(@V("information") String information, @UserMessage String userMessage);
     }
 
 
@@ -86,7 +77,7 @@ public class AppGigaRagNaive {
         // Теперь давайте загрузим документ, который мы хотим использовать для RAG.
         //DocumentParser documentParser = new TextDocumentParser();
         DocumentParser documentParser = new ApachePdfBoxDocumentParser();
-        Document document = loadDocument(CommonUtils.toPath(documentPath), documentParser);
+        Document document = loadDocument(CommonUtils.resourceCommonToPath(documentPath), documentParser);
 
 
         // Теперь нам нужно разбить этот документ на более мелкие сегменты, также известные как "куски".

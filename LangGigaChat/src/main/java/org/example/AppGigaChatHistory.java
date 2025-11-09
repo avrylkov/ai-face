@@ -7,6 +7,7 @@ import chat.giga.http.client.HttpClientException;
 import chat.giga.model.ModelName;
 import chat.giga.model.Scope;
 import chat.giga.model.completion.ChatMessage;
+import chat.giga.model.completion.ChatMessageRole;
 import chat.giga.model.completion.CompletionRequest;
 import chat.giga.model.completion.CompletionResponse;
 
@@ -29,14 +30,14 @@ public class AppGigaChatHistory {
                 //.maxTokens(20)
                 .message(ChatMessage.builder()
                         .content("Когда уже ИИ захватит этот мир?")
-                        .role(ChatMessage.Role.USER)
+                        .role(ChatMessageRole.USER)
                         .build())
                 .message(ChatMessage.builder()
                         .content("Пока что это не является неизбежным событием. " +
                                 "Несмотря на то, что искусственный интеллект (ИИ) развивается быстрыми темпами и может выполнять сложные задачи все более эффективно, " +
                                 "он по-прежнему ограничен в своих возможностях и не может заменить полностью человека во многих областях. Кроме того, существуют этические " +
                                 "и правовые вопросы, связанные с использованием ИИ, которые необходимо учитывать при его разработке и внедрении.")
-                        .role(ChatMessage.Role.ASSISTANT).build());
+                        .role(ChatMessageRole.ASSISTANT).build());
 
         String sessionId = "8324244b-7133-4d30-a328-31d8466e5502";
         try {
@@ -49,7 +50,7 @@ public class AppGigaChatHistory {
 
                 completionRequestBuilder.message(ChatMessage.builder()
                         .content("Думаешь, у нас еще есть шанс?")
-                        .role(ChatMessage.Role.USER).build());
+                        .role(ChatMessageRole.USER).build());
             }
         } catch (HttpClientException ex) {
             System.out.println(ex.statusCode() + " " + ex.bodyAsString());

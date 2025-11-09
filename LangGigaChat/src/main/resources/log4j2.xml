@@ -8,6 +8,5 @@
 
     <Loggers>
         <Logger name="org.example" level="INFO"/>
-
     </Loggers>
 </Configuration>

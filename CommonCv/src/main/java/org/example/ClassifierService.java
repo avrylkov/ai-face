@@ -1,11 +1,12 @@
 package org.example;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.output.JsonStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.example.model.ImageChildren;
 import org.example.model.ImageParent;
 import org.opencv.core.Mat;
@@ -29,7 +30,7 @@ public class ClassifierService {
         this.openCvUtils = openCvUtils;
     }
 
-    private static final Logger log = LogManager.getLogger(ClassifierService.class);
+    private static final Logger log = LoggerFactory.getLogger(ClassifierService.class);
 
     private List<ImageParent> imageParents = new ArrayList<>();
     private static final int MATCH_MINIMAL = 6;
@@ -49,7 +50,7 @@ public class ClassifierService {
                 OpenCvUtils.saveImage(encodeImage, String.format("./%s/%s.jpg", imageParent.getName(), imageParent.getName()));
                 log.info("Save parent {}", imageParent.getName());
             } catch (IOException e) {
-                log.error(e);
+                log.error("Error process", e);
             }
         }
     }
@@ -62,7 +63,7 @@ public class ClassifierService {
                 deserializeModel(fileToString);
                 log.info("Load deserialized Model");
             } catch (IOException e) {
-                log.error(e);
+                log.error("Error loadModuleFromJson", e);
                 return false;
             }
         } else {
@@ -77,7 +78,7 @@ public class ClassifierService {
         try {
             FileUtils.writeStringToFile(new File("./" + MODEL_FILE), serializeModel, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.error(e);
+            log.error("Error saveModel", e);
         }
     }
 

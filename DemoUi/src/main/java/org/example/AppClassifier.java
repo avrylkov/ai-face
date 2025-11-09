@@ -12,8 +12,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
@@ -29,13 +29,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AppClassifier extends Application {
 
-    private static Logger log = LogManager.getLogger(AppClassifier.class);
+    private static Logger log = LoggerFactory.getLogger(AppClassifier.class);
 
     private final OpenCvUtils openCvUtils = new OpenCvUtils();
     private final ClassifierService classifierService = new ClassifierService(openCvUtils);
     private final ScheduledExecutorService scheduler = new DynamicScheduledExecutorService(1);
     private VideoCapture videoCapture;
-    private AtomicBoolean cameraReady = new AtomicBoolean(false);
+    private final AtomicBoolean cameraReady = new AtomicBoolean(false);
     private Mat blackRec;
     private Mat faceImage;
 

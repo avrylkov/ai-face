@@ -12,14 +12,12 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -82,7 +80,7 @@ public class AppTest {
         EmbeddingModel embeddingModel = new OnnxEmbeddingModel(pathToModel, pathToTokenizer, poolingMode);
 
         TextDocumentParser documentParser = new TextDocumentParser();
-        dev.langchain4j.data.document.Document document = loadDocument(CommonUtils.toPath("./document/Сказка.txt"), documentParser);
+        dev.langchain4j.data.document.Document document = loadDocument(CommonUtils.resourceCommonToPath("./document/Сказка.txt"), documentParser);
         DocumentSplitter splitter = DocumentSplitters.recursive(300, 0);
         List<TextSegment> segments = splitter.split(document);
         Response<List<Embedding>> embedAll = embeddingModel.embedAll(segments);

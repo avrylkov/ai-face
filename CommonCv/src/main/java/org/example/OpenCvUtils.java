@@ -1,8 +1,9 @@
 package org.example;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import nu.pattern.OpenCV;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.DMatch;
@@ -41,7 +42,7 @@ import static org.opencv.features2d.DescriptorMatcher.FLANNBASED;
 
 public class OpenCvUtils {
 
-    private static final Logger log = LogManager.getLogger(OpenCvUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenCvUtils.class);
 
     private MatOfDMatch matOfDMatchEmpty;
 

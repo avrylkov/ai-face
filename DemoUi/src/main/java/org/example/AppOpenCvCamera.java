@@ -12,20 +12,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.example.Utils.mat2Img;
 
 public class AppOpenCvCamera extends Application {
 
-    private static final Logger log = LogManager.getLogger(AppOpenCvCamera.class);
+    private static final Logger log = LoggerFactory.getLogger(AppOpenCvCamera.class);
 
     private OpenCvUtils openCvUtils = new OpenCvUtils();
     private VideoCapture videoCapture;
