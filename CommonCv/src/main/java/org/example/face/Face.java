@@ -9,19 +9,19 @@ import java.util.List;
 
 public class Face {
 
-    private final OpenCVImage face;
+    private final OpenCVImage imageFace;
     private final int id;
     private Person person;
     private LocalDateTime meetingTime;
     private List<Message> messages = new ArrayList<>();
 
-    public Face(OpenCVImage face, int id) {
-        this.face = face;
+    public Face(OpenCVImage imageFace, int id) {
+        this.imageFace = imageFace;
         this.id = id;
     }
 
     public OpenCVImage getImageFace() {
-        return face;
+        return imageFace;
     }
 
     public int getId() {

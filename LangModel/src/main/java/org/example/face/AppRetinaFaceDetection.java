@@ -7,8 +7,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import org.example.opencv.OpenCVImage;
+import org.example.opencv.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.function.Consumer;
 
 public class AppRetinaFaceDetection extends Application {
 
@@ -27,11 +31,15 @@ public class AppRetinaFaceDetection extends Application {
         ImageView imageView = new ImageView();
         root.setCenter(imageView);
 
+        Consumer<OpenCVImage> applyImage2View = (OpenCVImage image) -> {
+            Utils.apply2view(imageView, image);
+        };
+
         Scene scene = new Scene(root, 800, 600);
         stage.setScene(scene);
         stage.setOnCloseRequest(this::onCloseStage);
 
-        videoFace2Detection.start(new Image2View(imageView));
+        videoFace2Detection.start(applyImage2View);
 
         stage.show();
     }

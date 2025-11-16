@@ -96,7 +96,7 @@ public class AssistantChatService {
     }
 
     public String IsNoOne() {
-        return assistantChat.chat("Перед тобой никого нет, но тебе хочется общения с человеком, скажи что ты ждешь человека");
+        return assistantChat.chat("Перед тобой никого нет или лицо далеко от тебя, но тебе хочется общения с человеком, скажи что ты ждешь человека или попроси подойти ближе");
     }
 
     public String noUnderstandYourName(String message) {

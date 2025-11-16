@@ -45,4 +45,8 @@ public class GlobalContext implements ApplicationContextAware {
         return allFaces;
     }
 
+    public static int nextFaceId() {
+        return allFaces.size() + 1;
+    }
+
 }

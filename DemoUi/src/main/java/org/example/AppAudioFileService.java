@@ -14,7 +14,7 @@ public class AppAudioFileService {
     public  static void main(String[] args) {
         try {
             byte[] audioBytes = FileUtils.readFileToByteArray(new File("./Recording.wav"));
-            AudioService audioService = new AudioService();
+            AudioService audioService = new AudioService(() -> System.out.println("file ready"));
             audioService.writeAudioMap(audioBytes, "./audioMap.csv");
             List<int[]> detectSilence = audioService.detectSilence(audioBytes);
             log.info("Detected silence {}", detectSilence);

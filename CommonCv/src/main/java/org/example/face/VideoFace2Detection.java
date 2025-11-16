@@ -1,9 +1,7 @@
 package org.example.face;
 
-import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.output.Rectangle;
-import ai.djl.repository.zoo.ZooModel;
 import org.example.DynamicScheduledExecutorService;
 import org.example.RepeatingTask;
 import org.example.opencv.OpenCVImage;
@@ -17,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 public class VideoFace2Detection {
 
@@ -30,12 +28,11 @@ public class VideoFace2Detection {
     private VideoCapture videoCapture;
     private OpenCVImageFactory openCVImageFactory;
     private final FaceDetectionService faceDetectionService = new FaceDetectionService();
-    private Image2View image2View;
-    private DetectedObjects detectedObjects;
-    private OpenCVImage inputImage;
+    private Consumer<OpenCVImage> image2View;
+    private List<OpenCVImage> detectFaces = new ArrayList<>();
 
 
-    public void start(Image2View image2View) {
+    public void start(Consumer<OpenCVImage> image2View) {
         this.image2View = image2View;
         openCVImageFactory = new OpenCVImageFactory();
         videoCapture = new VideoCapture(0);
@@ -88,10 +85,9 @@ public class VideoFace2Detection {
         try {
             triedLock = detectedObjectsLock.tryLock(3, TimeUnit.SECONDS);
             if (triedLock) {
-                //inputImage = (OpenCVImage) image.duplicate();
-                inputImage = image;
-                detectedObjects = faceDetectionService.predict(image);
-                image2View.apply(image);
+                DetectedObjects detectedObjects = faceDetectionService.predict(image);
+                detectFaces = getFacesNearest(image, detectedObjects, 0.08);
+                image2View.accept(image);
             }
         } finally {
             if (triedLock) {
@@ -108,16 +104,20 @@ public class VideoFace2Detection {
        detectedObjectsLock.unlock();
     }
 
-    public DetectedObjects getDetectedObjects() {
-        return detectedObjects;
+    public List<OpenCVImage> getDetectFaces() {
+        return detectFaces;
     }
 
-    public List<OpenCVImage> getFaces(DetectedObjects detection) {
+    private List<OpenCVImage> getFacesNearest(OpenCVImage inputImage, DetectedObjects detection, double threshold) {
         List<DetectedObjects.DetectedObject> list = detection.items();
         List<OpenCVImage> faces = new ArrayList<>();
         for (DetectedObjects.DetectedObject detectedObject : list) {
-            Rectangle rectangle = detectedObject.getBoundingBox().getBounds();
-            faces.add((OpenCVImage) inputImage.getSubImage(rectangle));
+            Rectangle faceRectangle = detectedObject.getBoundingBox().getBounds();
+            double areaFace = faceRectangle.getHeight() * inputImage.getHeight() * faceRectangle.getWidth() * inputImage.getWidth();
+            double areaImage = inputImage.getHeight() * inputImage.getWidth();
+            if (areaFace/areaImage > threshold) {
+                faces.add((OpenCVImage) inputImage.getSubImage(faceRectangle));
+            }
         }
         return faces;
     }

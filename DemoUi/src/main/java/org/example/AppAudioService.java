@@ -11,7 +11,7 @@ public class AppAudioService {
             Scanner scanner = new Scanner(System.in);
             String line = scanner.nextLine();
             //
-            AudioService audioService = new AudioService();
+            AudioService audioService = new AudioService(() ->  System.out.println("file ready"));
             audioService.startLine();
             //
             System.out.println("Stopping audio...");

@@ -126,6 +126,13 @@
         <version>${javafx-graphics.version}</version>
       </dependency>
 
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx-graphics.version}</version>
+        </dependency>
+
+
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>

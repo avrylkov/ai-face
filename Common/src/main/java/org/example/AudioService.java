@@ -46,9 +46,13 @@ public class AudioService {
     private TargetDataLine line;
     private int bufferLengthInBytes;
     private boolean isRecording = false;
+    private Runnable fileReady;
+
+    public AudioService(Runnable fileReady) {
+        this.fileReady = fileReady;
+    }
 
     public void init() {
-        //String userHome = System.getProperty("user.home");
         File file = new File(CommonProperties.INSTANCE().getVoiceFolder());
         if (!file.exists()) {
             try {
@@ -266,6 +270,7 @@ public class AudioService {
     private void writePartAudio(byte[] audioBytes, Counter counter) {
         List<int[]> detectSilence = detectSilence(audioBytes);
         log.debug("detectSilence: {}", detectSilence);
+        boolean isFileWrite = false;
         for (int[] silencePeriod : detectSilence) {
             int lengthMs = getSilenceLengthMs(silencePeriod[0], silencePeriod[1]);
             if (lengthMs > pauseLengthMs) {
@@ -282,12 +287,20 @@ public class AudioService {
                 log.info("Записан файл {}", file);
                 counter.count++;
                 outputStream.reset();
+                isFileWrite = true;
+                fileReady.run();
                 break;
             }
         }
+        if (!isFileWrite) {
+            log.info("Аудио поток не записан silence-count{}, ms:{}",
+                    detectSilence.size(),
+                    detectSilence.stream().map(s -> getSilenceLengthMs(s[0], s[1])).collect(Collectors.toList())
+            );
+        }
     }
 
-    private class Counter {
+    private static class Counter {
         public int count = 1;
     }
 

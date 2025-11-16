@@ -5,12 +5,10 @@ import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.translate.TranslateException;
 import javafx.application.Platform;
-import org.example.CommonProperties;
 import org.example.DynamicScheduledExecutorService;
 import org.example.RepeatingTask;
 import org.example.face.Face;
 import org.example.face.FeatureExtraction;
-import org.example.face.Image2View;
 import org.example.face.Person;
 import org.example.face.VideoFace2Detection;
 import org.example.face.Voice2WishperService;
@@ -38,7 +36,7 @@ public class DialogueCycle {
         GreetingOldFriend,
         MultiplePersons,
         WaitingFace,
-        Unknown;
+        Unknown
     }
 
     private static final Logger log = LoggerFactory.getLogger(DialogueCycle.class);
@@ -50,14 +48,17 @@ public class DialogueCycle {
     private final Voice2WishperService voice2WishperService = new Voice2WishperService();
     private final RepeatingTask repeatingLifeCycleTask = new RepeatingTask(this::runDialogueCycle, 0,200, "lifeCycle");
     private AssistantChatService assistantChatService;
-    private final AtomicReference<Face> currentFace = new AtomicReference<>();;
+    private final AtomicReference<Face> currentFace = new AtomicReference<>();
     private SpeechFaceController speechFaceController;
     private LifeCycleSateEnum currentState = LifeCycleSateEnum.Unknown;
     private boolean isAgentThinks = false;
     private javafx.scene.image.Image imageThink = null;
     private final AtomicBoolean isPauseDetect =  new AtomicBoolean(false);
+    private OpenCVImage tempCurrentFace = null;
 
     private static final float thresholdSimilar = 0.7f;
+
+    private final Consumer<OpenCVImage> applyImage2View = (OpenCVImage image) -> Utils.apply2view(speechFaceController.getImageView(), image);
 
     public void init(SpeechFaceController speechFaceController) {
         if (repeatingLifeCycleTask.isStarted()) {
@@ -68,7 +69,7 @@ public class DialogueCycle {
         this.speechFaceController = speechFaceController;
         imageThink = Utils.getImage("think.gif");
         featureExtraction.init();
-        videoFace2Detection.start(new Image2View(speechFaceController.getImageView()));
+        videoFace2Detection.start(applyImage2View);
         voice2WishperService.init(this::setUserMessage, this::microphoneOff);
         llmService.initialize();
         assistantChatService = llmService.getAssistantChatService();
@@ -115,7 +116,7 @@ public class DialogueCycle {
         if (isPauseDetect.get()) {
             videoFace2Detection.stopSchedule();
         } else {
-            videoFace2Detection.start(new Image2View(speechFaceController.getImageView()));
+            videoFace2Detection.start(applyImage2View);
         }
     }
 
@@ -136,19 +137,20 @@ public class DialogueCycle {
                 return;
             }
             //
-            DetectedObjects faceDetect = videoFace2Detection.getDetectedObjects();
-            if (faceDetect != null && faceDetect.getNumberOfObjects() > 0) {
-                List<OpenCVImage> facesImage = videoFace2Detection.getFaces(faceDetect);
+            List<OpenCVImage> detectFaces = videoFace2Detection.getDetectFaces();
+            if (!detectFaces.isEmpty()) {
+                //List<OpenCVImage> facesImage = videoFace2Detection.getFacesNearest(faceDetect, 0.3);
                 videoFace2Detection.setDetectedObjectsUnlock();
                 faceObjectsLock = false;
-                if (facesImage.size() == 1) {
+                if (detectFaces.size() == 1) {
                     if (isSameCurrentFace()) {
                         continueCurrentFace();
-                    } else if (lookingFamiliarFaceAndSetCurrent(facesImage.get(0))) {
+                    } else if (lookingFamiliarFaceAndSetCurrent(detectFaces.get(0))) {
                         greetingOldFriend(currentFace.get());
                     } else {
-                        startMeetingNewPerson(facesImage.get(0));
+                        startMeetingNewPerson();
                     }
+                    setFaceImage(detectFaces.get(0));
                 } else {
                     detectMultiplePersons();
                 }
@@ -224,17 +226,17 @@ public class DialogueCycle {
         }
     }
 
-    private void startMeetingNewPerson(OpenCVImage facesImage) {
+    private void startMeetingNewPerson() {
         if (currentState != LifeCycleSateEnum.MeetingNewPerson) {
             setCurrentState(LifeCycleSateEnum.MeetingNewPerson);
             faceReset();
             clearMessages();
-            setCurrentFace(new Face((OpenCVImage) facesImage.duplicate(), GlobalContext.getAllFaces().size() + 1));
+            //setCurrentFace(new Face((OpenCVImage) facesImage.duplicate(), GlobalContext.nextFaceId()));
             agentWelcomeMeetingNewPerson();
         }
     }
 
-    private void setFaceImage(OpenCVImage faceImage, String faceName) {
+    private void setFaceImageAndName(OpenCVImage faceImage, String faceName) {
         Platform.runLater(() -> {
             speechFaceController.getImageFace().setImage(faceImage == null ? null : Utils.img2fx(faceImage));
             speechFaceController.getFaceName().setText(faceName);
@@ -279,20 +281,18 @@ public class DialogueCycle {
             try {
                 Person person = assistantChatService.agentDetectPersonInfo(message);
                 if (person != null && person.firstName() != null && person.lastName() != null) {
-                    if (currentFace.get() != null && currentFace.get().getPerson() == null) {
-                        currentFace.get().setPerson(person, LocalDateTime.now());
+                    if (currentFace.get() == null /*&& currentFace.get().getPerson() == null*/) {
+                        Face face = new Face(tempCurrentFace, GlobalContext.nextFaceId());
+                        setCurrentFace(face);
+                        face.setPerson(person, LocalDateTime.now());
+                        log.info("новый человек {}", currentFace.get());
                         Platform.runLater(() -> {
                             speechFaceController.getFaceName().setText(person.firstName() + " " + person.lastName());
                         });
                         //
-                        log.info("новый человек {}", currentFace.get());
                         assistantChatService.niceMeetYou(currentFace.get().getId(), person,
                                 (text) -> speechFaceController.getAgentText().appendText(text));
-                        speechFaceController.getAgentText().appendText(getDelimiter());
-                        //assistantChat.agentSratDialogue((text) -> speechFaceController.getAgentText().appendText(text));
-                        //speechFaceController.getAgentText().appendText(getDelimiter());
-                        //
-                        //speechFaceController.getAgentText().appendText(assistantChat.agentSratDialogue() + getDelimiter());
+                        Platform.runLater(() -> speechFaceController.getAgentText().appendText(getDelimiter()));
                         GlobalContext.getAllFaces().add(currentFace.get());
                         //
                         log.info("Успешно добавлен новый человек {}", currentFace.get());
@@ -326,8 +326,6 @@ public class DialogueCycle {
         if (currentState != LifeCycleSateEnum.WaitingFace) {
             setCurrentState(LifeCycleSateEnum.WaitingFace);
             agentIsNoOneRepeat();
-            //resetBeforeWaiting();
-            //new AwaitTask(this::agentIsNoOne, 2000, "isNoOne").start();
         }
     }
 
@@ -337,8 +335,8 @@ public class DialogueCycle {
             TimeUnit.MILLISECONDS.sleep(100);
             boolean faceObjectsLock = videoFace2Detection.setDetectedObjectsLock();
             if (faceObjectsLock) {
-                DetectedObjects faceDetect = videoFace2Detection.getDetectedObjects();
-                if (faceDetect != null && faceDetect.getNumberOfObjects() > 0) {
+                List<OpenCVImage> detectFaces = videoFace2Detection.getDetectFaces();
+                if (!detectFaces.isEmpty()) {
                     attempts ++;
                 } else {
                     attempts --;
@@ -357,19 +355,6 @@ public class DialogueCycle {
             log.info("появилось лицо");
         }
     }
-
-//    private void agentIsNoOne() {
-//        if (currentFace.get() == null) {
-//            runCommand(() -> {
-//                log.info("никого не обнаружено");
-//                setAgentThink(true);
-//                speechFaceController.getAgentText().appendText(assistantChatService.IsNoOne() + getDelimiter());
-//                setAgentThink(false);
-//            });
-//        } else {
-//            log.info("появилось лицо {}", currentFace.get());
-//        }
-//    }
 
     private void agentWelcomeMeetingNewPerson() {
         log.info("начало знакомства c новым человеком");
@@ -413,7 +398,6 @@ public class DialogueCycle {
     }
 
     private boolean isSameCurrentFaceRepeatTimes(OpenCVImage currentFace) throws InterruptedException {
-        //OpenCVImage imageFace = currentFace.getImageFace();
         int attempts = 0;
         for (int i = 0; i < 3; i++) {
             TimeUnit.MILLISECONDS.sleep(100);
@@ -423,11 +407,12 @@ public class DialogueCycle {
                     log.info("не удалось получить доступ к лицам");
                     continue;
                 }
-                DetectedObjects faceDetect = videoFace2Detection.getDetectedObjects();
-                if (faceDetect == null || faceDetect.getNumberOfObjects() != 1) {
+                List<OpenCVImage> detectFaces = videoFace2Detection.getDetectFaces();
+                if (detectFaces.size() != 1) {
+                    videoFace2Detection.setDetectedObjectsUnlock();
                     continue;
                 }
-                List<OpenCVImage> facesImage = videoFace2Detection.getFaces(faceDetect);
+                List<OpenCVImage> facesImage = videoFace2Detection.getDetectFaces();
                 OpenCVImage cameraFace = facesImage.get(0);
 
                 try (Predictor<Image, float[]> predictor1 = featureExtraction.predictor()) {
@@ -483,7 +468,7 @@ public class DialogueCycle {
             }
         }
         long count = GlobalContext.getAllFaces().stream().filter(face -> face.getPerson() != null).count();
-        log.info("не найден знакомый человек, всего знакомых {}", count);
+        log.debug("не найден знакомый человек, всего знакомых {}", count);
         return false;
     }
 
@@ -507,8 +492,19 @@ public class DialogueCycle {
         log.info("setCurrentFace, установка текущего лица, прежнее {}, новое {}", currentFace.get(), face);
         GlobalContext.setCurrentFace(face);
         currentFace.set(face);
-        setFaceImage(face == null ? null : face.getImageFace(),
+        tempCurrentFace = face == null ? null : face.getImageFace();
+        setFaceImageAndName(face == null ? null : face.getImageFace(),
                 face == null || face.getPerson() == null ? "?": face.getPerson().getFullName());
+    }
+
+    private void setFaceImage(OpenCVImage image) {
+        if (currentFace.get() != null && currentFace.get().getImageFace() != null) {
+            return;
+        }
+        tempCurrentFace = image;
+        Platform.runLater(() -> {
+            speechFaceController.getImageFace().setImage(image == null ? null : Utils.img2fx(image));
+        });
     }
 
     private void setAgentThink(boolean isThink) {

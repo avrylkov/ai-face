@@ -10,7 +10,7 @@ public class AppAudioSplitService {
             Scanner scanner = new Scanner(System.in);
             String line = scanner.nextLine();
             //
-            AudioService audioService = new AudioService();
+            AudioService audioService = new AudioService(() ->   System.out.println("file ready"));
             audioService.init();
             audioService.recordSplitStart();
             //

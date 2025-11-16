@@ -15,7 +15,7 @@ import static org.example.CommonUtils.toUri;
 
 public class VoiceQueue {
 
-    private ScheduledExecutorService scheduler = new DynamicScheduledExecutorService(1);
+    //private ScheduledExecutorService scheduler = new DynamicScheduledExecutorService(1);
 
     private static final Logger log = LoggerFactory.getLogger(VoiceQueue.class);
 
@@ -26,10 +26,10 @@ public class VoiceQueue {
     public void initialize(Function<URI, String> translate, Runnable microphoneOff) {
         this.translate = translate;
         this.microphoneOff = microphoneOff;
-        audioService = new AudioService();
+        audioService = new AudioService(this::readFileQueueToSpeech);
         audioService.init();
         //audioService.recordSplitStart();
-        scheduler.scheduleAtFixedRate(this::readFileQueueToSpeech, 1000, 100, TimeUnit.MILLISECONDS);
+        //scheduler.scheduleAtFixedRate(this::readFileQueueToSpeech, 1000, 100, TimeUnit.MILLISECONDS);
         log.info("Voice queue initialized");
     }
 
@@ -38,15 +38,15 @@ public class VoiceQueue {
         if (audioService != null) {
             audioService.recordSplitStop();
         }
-        scheduler.shutdown();
+        //scheduler.shutdown();
     }
 
     public void start() {
-        if (scheduler.isShutdown()) {
-            log.info("Начало записи голоса");
-            scheduler = new DynamicScheduledExecutorService(1);
-            scheduler.scheduleAtFixedRate(this::readFileQueueToSpeech, 1000, 100, TimeUnit.MILLISECONDS);
-        }
+        log.info("Начало записи голоса");
+//        if (scheduler.isShutdown()) {
+//            scheduler = new DynamicScheduledExecutorService(1);
+//            scheduler.scheduleAtFixedRate(this::readFileQueueToSpeech, 1000, 100, TimeUnit.MILLISECONDS);
+//        }
         audioService.recordSplitStart();
     }
 
