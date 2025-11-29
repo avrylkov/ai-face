@@ -20,9 +20,9 @@ import static org.example.lang.model.ToolResult.toolResultOk;
 @Service
 public class ToolExecutorSendMessage {
 
-    public static final String ToolSendMessage = "Отправка сообщения";
-    public static final String ToolParameterSendMessageTo = "Кому отправить";
-    public static final String ToolParameterSendMessageText = "Текст сообщения";
+    public static final String ToolSendMessage = "send_message";
+    public static final String ToolParameterSendMessageTo = "send_to";
+    public static final String ToolParameterSendMessageText = "send_text";
 
     private static final Logger log = LoggerFactory.getLogger(ToolExecutorSendMessage.class);
     private final ObjectMapper objectMapper = new ObjectMapper();

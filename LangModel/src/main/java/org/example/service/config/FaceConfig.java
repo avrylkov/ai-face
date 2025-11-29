@@ -51,7 +51,7 @@ public class FaceConfig {
             SpeechFaceController faceController = GlobalContext.getContext().getBean(FxmlBeanController, SpeechFaceController.class);
             Platform.runLater(() -> {
                 ObservableList<String> items = faceController.toolFeedBack.getItems();
-                if (items.size() > 1) {
+                if (items.size() > 2) {
                     faceController.toolFeedBack.getItems().remove(items.size() - 1);
                 }
             });

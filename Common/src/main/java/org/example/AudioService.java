@@ -1,5 +1,6 @@
 package org.example;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -17,11 +18,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AudioService {
 
@@ -237,6 +240,7 @@ public class AudioService {
 
 
     class VoiceRecorderSplitter extends Thread {
+
         @Override
         public void run() {
             log.info("Начало обработки аудио...");
@@ -269,8 +273,10 @@ public class AudioService {
 
     private void writePartAudio(byte[] audioBytes, Counter counter) {
         List<int[]> detectSilence = detectSilence(audioBytes);
+        if (CollectionUtils.isEmpty(detectSilence)) {
+            log.info("Пауза не обнаружена в аудио потоке: {}", meanAbsolute16LE(audioBytes));
+        }
         log.debug("detectSilence: {}", detectSilence);
-        boolean isFileWrite = false;
         for (int[] silencePeriod : detectSilence) {
             int lengthMs = getSilenceLengthMs(silencePeriod[0], silencePeriod[1]);
             if (lengthMs > pauseLengthMs) {
@@ -287,17 +293,23 @@ public class AudioService {
                 log.info("Записан файл {}", file);
                 counter.count++;
                 outputStream.reset();
-                isFileWrite = true;
                 fileReady.run();
                 break;
             }
         }
-        if (!isFileWrite) {
-            log.info("Аудио поток не записан silence-count{}, ms:{}",
-                    detectSilence.size(),
-                    detectSilence.stream().map(s -> getSilenceLengthMs(s[0], s[1])).collect(Collectors.toList())
-            );
+    }
+
+    private double meanAbsolute16LE(byte[] audioBytes) {
+        int samples = audioBytes.length / 2;
+        if (samples == 0) return 0.0;
+        double sumAbs = 0;
+        for (int i = 0; i < samples; i++) {
+            int lo = audioBytes[2 * i] & 0xFF;
+            int hi = audioBytes[2 * i + 1];
+            int sample = (hi << 8) | lo;
+            sumAbs += Math.abs(sample);
         }
+        return sumAbs / samples;
     }
 
     private static class Counter {

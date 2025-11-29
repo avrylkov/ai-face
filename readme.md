@@ -24,7 +24,7 @@ ollama run PetrosStav/gemma3-tools:12b
 
 Фото на момент представления  +
 Звук уведомление о файле      +
-Лица в максимальный кадр
+Лица в максимальный кадр      +  
 VideoFaceDetector через consumer в DialogCycle 
 
 

@@ -20,7 +20,7 @@ public class ToolExecutorReadMessage {
 
     private static final Logger log = LoggerFactory.getLogger(ToolExecutorReadMessage.class);
 
-    public static final String ToolReadMessage = "Чтение новых сообщений";
+    public static final String ToolReadMessage = "read_new_message";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private MessageService messageService;
